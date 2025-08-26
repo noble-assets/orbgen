@@ -1,22 +1,19 @@
-// SPDX-License-Identifier: BUSL-1.1
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
 //
-// Copyright (C) 2025, NASD Inc. All rights reserved.
-// Use of this software is governed by the Business Source License included
-// in the LICENSE file of this repository and at www.mariadb.com/bsl11.
+// http://www.apache.org/licenses/LICENSE-2.0
 //
-// ANY USE OF THE LICENSED WORK IN VIOLATION OF THIS LICENSE WILL AUTOMATICALLY
-// TERMINATE YOUR RIGHTS UNDER THIS LICENSE FOR THE CURRENT AND ALL OTHER
-// VERSIONS OF THE LICENSED WORK.
-//
-// THIS LICENSE DOES NOT GRANT YOU ANY RIGHT IN ANY TRADEMARK OR LOGO OF
-// LICENSOR OR ITS AFFILIATES (PROVIDED THAT YOU MAY USE A TRADEMARK OR LOGO OF
-// LICENSOR AS EXPRESSLY REQUIRED BY THIS LICENSE).
-//
-// TO THE EXTENT PERMITTED BY APPLICABLE LAW, THE LICENSED WORK IS PROVIDED ON
-// AN "AS IS" BASIS. LICENSOR HEREBY DISCLAIMS ALL WARRANTIES AND CONDITIONS,
-// EXPRESS OR IMPLIED, INCLUDING (WITHOUT LIMITATION) WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, AND
-// TITLE.
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
 
 package internal
 
@@ -30,7 +27,6 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-
 	"github.com/noble-assets/orbiter/testutil"
 	"github.com/noble-assets/orbiter/types/controller/forwarding"
 	"github.com/noble-assets/orbiter/types/core"
@@ -53,7 +49,9 @@ func (m Model) writeCCTPForwardingSelection(s *strings.Builder) {
 	s.WriteString(lipgloss.NewStyle().Bold(true).Render("Configure CCTP Forwarding"))
 	s.WriteString("\n\n")
 	s.WriteString("CCTP enables USDC transfers across chains. Configure the destination details:\n")
-	s.WriteString("• Domain: Chain identifier (0=Ethereum, 1=Avalanche, 2=OP, 3=Arbitrum, 6=Base)\n")
+	s.WriteString(
+		"• Domain: Chain identifier (0=Ethereum, 1=Avalanche, 2=OP, 3=Arbitrum, 6=Base)\n",
+	)
 	s.WriteString("• Mint Recipient: Address that receives USDC on destination\n")
 	s.WriteString("• Destination Caller: Address that can call functions on destination\n")
 	s.WriteString("• Passthrough Payload: Additional data to pass through (optional)\n\n")
@@ -67,8 +65,14 @@ func (m Model) writeCCTPForwardingSelection(s *strings.Builder) {
 
 func (m Model) initForwardingSelection() Model {
 	forwardingItems := []list.Item{
-		item{title: core.PROTOCOL_CCTP.String(), desc: "Circle's Cross-Chain Transfer Protocol (USDC transfers)"},
-		item{title: core.PROTOCOL_IBC.String(), desc: "Inter-Blockchain Communication (Cosmos ecosystem)"},
+		item{
+			title: core.PROTOCOL_CCTP.String(),
+			desc:  "Circle's Cross-Chain Transfer Protocol (USDC transfers)",
+		},
+		item{
+			title: core.PROTOCOL_IBC.String(),
+			desc:  "Inter-Blockchain Communication (Cosmos ecosystem)",
+		},
 		item{title: core.PROTOCOL_HYPERLANE.String(), desc: "Hyperlane interchain protocol"},
 	}
 
