@@ -18,6 +18,7 @@
 package internal
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -99,17 +100,20 @@ func (m Model) processFeeAction() (tea.Model, tea.Cmd) {
 	basisPointsStr := m.actionInputs[1].Value()
 
 	if recipientAddr == "" {
-		m.err = fmt.Errorf("recipient address is required")
+		m.err = errors.New("recipient address is required")
+
 		return m, nil
 	}
 	if basisPointsStr == "" {
-		m.err = fmt.Errorf("basis points is required")
+		m.err = errors.New("basis points is required")
+
 		return m, nil
 	}
 
 	basisPoints, err := strconv.ParseUint(basisPointsStr, 10, 32)
 	if err != nil {
-		m.err = fmt.Errorf("invalid basis points: %v", err)
+		m.err = fmt.Errorf("invalid basis points: %w", err)
+
 		return m, nil
 	}
 
@@ -123,25 +127,30 @@ func (m Model) processFeeAction() (tea.Model, tea.Cmd) {
 	}
 
 	if err = feeAttr.Validate(); err != nil {
-		m.err = fmt.Errorf("invalid fee attributes: %v", err)
+		m.err = fmt.Errorf("invalid fee attributes: %w", err)
+
 		return m, nil
 	}
 
 	feeAction := core.Action{
 		Id: core.ACTION_FEE,
 	}
+
 	err = feeAction.SetAttributes(&feeAttr)
 	if err != nil {
-		m.err = fmt.Errorf("failed to set action attributes: %v", err)
+		m.err = fmt.Errorf("failed to set action attributes: %w", err)
+
 		return m, nil
 	}
 
 	if err = feeAction.Validate(); err != nil {
-		m.err = fmt.Errorf("invalid fee action: %v", err)
+		m.err = fmt.Errorf("invalid fee action: %w", err)
+
 		return m, nil
 	}
 
 	m.actions = append(m.actions, &feeAction)
+
 	return m.initActionSelection(), nil
 }
 
@@ -172,14 +181,13 @@ func (m Model) updateActionInputs(msg tea.Msg) tea.Cmd {
 		return nil
 	}
 
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	if msg, ok := msg.(tea.KeyMsg); ok {
 		switch msg.String() {
-		case "tab", "shift+tab", "up", "down":
+		case Tab, ShiftTab, Up, Down:
 			s := msg.String()
 
 			// Update focus position
-			if s == "up" || s == "shift+tab" {
+			if s == Up || s == ShiftTab {
 				if focusIndex > 0 {
 					focusIndex--
 				}
@@ -191,7 +199,7 @@ func (m Model) updateActionInputs(msg tea.Msg) tea.Cmd {
 
 			// Update focus for all inputs
 			cmds := make([]tea.Cmd, len(m.actionInputs))
-			for i := 0; i < len(m.actionInputs); i++ {
+			for i := range m.actionInputs {
 				if i == focusIndex {
 					cmds[i] = m.actionInputs[i].Focus()
 				} else {

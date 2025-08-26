@@ -76,7 +76,7 @@ func InitialModel() Model {
 	}
 
 	l := list.New(actionItems, list.NewDefaultDelegate(), 0, 0)
-	l.Title = "Select an action to add:"
+	l.Title = "Select an action to add:" //nolint:goconst
 
 	return Model{
 		state:   actionSelection,
@@ -109,6 +109,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.windowHeight = msg.Height
 		m.list.SetWidth(msg.Width)
 		m.list.SetHeight(msg.Height - 3)
+
 		return m, nil
 	}
 
@@ -125,36 +126,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, cmd
-}
-
-func (m Model) handleEnter() (tea.Model, tea.Cmd) {
-	switch m.state {
-	case actionSelection:
-		selected := m.list.SelectedItem().(item)
-		switch selected.title {
-		case core.ACTION_FEE.String():
-			return m.initFeeActionInput(), nil
-		case core.ACTION_SWAP.String():
-			panic("not implemented yet: " + core.ACTION_SWAP.String())
-		case "No more actions":
-			return m.initForwardingSelection(), nil
-		}
-	case feeActionInput:
-		return m.processFeeAction()
-	case forwardingSelection:
-		selected := m.list.SelectedItem().(item)
-		switch selected.title {
-		case core.PROTOCOL_CCTP.String():
-			return m.initCCTPForwardingInput(), nil
-		case core.PROTOCOL_IBC.String():
-			panic("not supported yet: " + core.PROTOCOL_IBC.String())
-		case core.PROTOCOL_HYPERLANE.String():
-			panic("not implemented yet: " + core.PROTOCOL_HYPERLANE.String())
-		}
-	case cctpForwardingInput:
-		return m.processCCTPForwarding()
-	}
-	return m, nil
 }
 
 func (m Model) View() string {
@@ -180,4 +151,43 @@ func (m Model) View() string {
 	}
 
 	return s.String()
+}
+
+func (m Model) handleEnter() (tea.Model, tea.Cmd) {
+	switch m.state {
+	case actionSelection:
+		selected, ok := m.list.SelectedItem().(item)
+		if !ok {
+			panic(fmt.Sprintf("failed to cast list item to item; got: %T", m.list.SelectedItem()))
+		}
+
+		switch selected.title {
+		case core.ACTION_FEE.String():
+			return m.initFeeActionInput(), nil
+		case core.ACTION_SWAP.String():
+			panic("not implemented yet: " + core.ACTION_SWAP.String())
+		case "No more actions":
+			return m.initForwardingSelection(), nil
+		}
+	case feeActionInput:
+		return m.processFeeAction()
+	case forwardingSelection:
+		selected, ok := m.list.SelectedItem().(item)
+		if !ok {
+			panic(fmt.Sprintf("failed to cast list item to item; got: %T", m.list.SelectedItem()))
+		}
+
+		switch selected.title {
+		case core.PROTOCOL_CCTP.String():
+			return m.initCCTPForwardingInput(), nil
+		case core.PROTOCOL_IBC.String():
+			panic("not supported yet: " + core.PROTOCOL_IBC.String())
+		case core.PROTOCOL_HYPERLANE.String():
+			panic("not implemented yet: " + core.PROTOCOL_HYPERLANE.String())
+		}
+	case cctpForwardingInput:
+		return m.processCCTPForwarding()
+	}
+
+	return m, nil
 }

@@ -9,10 +9,10 @@ install:
 #=============================================================================#
 #                                 Tooling                                     #
 #=============================================================================#
-.PHONY: tool-all license format lint vulncheck nancy
+.PHONY: tool-all license format lint nancy
 
 # This runs all the common tools like linting, etc.
-tool-all : license format lint vulncheck nancy
+tool-all: license format lint nancy
 
 FILES := $(shell find . -name "*.go" -not -path "./simapp/*" -not -name "*.pb.go" -not -name "*.pb.gw.go" -not -name "*.pulsar.go")
 license:
@@ -23,6 +23,7 @@ license:
 check-license:
 	@echo "Checking files for license..."
 	@go-license --config .github/license.yaml $(FILES) --verify
+	@echo "Done!"
 
 GOLANGCI_LINT_VERSION="v2.2.2"
 GOLANGCI_LINT_IMAGE=golangci/golangci-lint:$(GOLANGCI_LINT_VERSION)

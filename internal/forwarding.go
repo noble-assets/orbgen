@@ -136,15 +136,19 @@ func (m Model) processCCTPForwarding() (tea.Model, tea.Cmd) {
 
 	domain, err := strconv.ParseUint(domainStr, 10, 32)
 	if err != nil {
-		m.err = fmt.Errorf("invalid destination domain: %v", err)
+		m.err = fmt.Errorf("invalid destination domain: %w", err)
+
+		return m, nil
+	}
+
+	if mintRecipientStr == "" {
+		m.err = errors.New("mint recipient cannot be empty")
+
 		return m, nil
 	}
 
 	var mintRecipient []byte
-	if mintRecipientStr == "" {
-		m.err = errors.New("mint recipient cannot be empty")
-		return m, nil
-	} else if mintRecipientStr == "r" {
+	if mintRecipientStr == "r" {
 		mintRecipient = testutil.RandomBytes(32)
 	} else {
 		mintRecipient = []byte(mintRecipientStr)
@@ -169,7 +173,8 @@ func (m Model) processCCTPForwarding() (tea.Model, tea.Cmd) {
 		passthroughPayload,
 	)
 	if err != nil {
-		m.err = fmt.Errorf("failed to create CCTP forwarding: %v", err)
+		m.err = fmt.Errorf("failed to create CCTP forwarding: %w", err)
+
 		return m, nil
 	}
 
@@ -177,7 +182,8 @@ func (m Model) processCCTPForwarding() (tea.Model, tea.Cmd) {
 
 	m.payload, err = buildFinalPayload(m.forwarding, m.actions)
 	if err != nil {
-		m.err = fmt.Errorf("failed to build finalPayload: %v", err)
+		m.err = fmt.Errorf("failed to build finalPayload: %w", err)
+
 		return m, nil
 	}
 
@@ -189,14 +195,13 @@ func (m Model) updateForwardingInputs(msg tea.Msg) tea.Cmd {
 		return nil
 	}
 
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	if msg, ok := msg.(tea.KeyMsg); ok {
 		switch msg.String() {
-		case "tab", "shift+tab", "up", "down":
+		case Tab, ShiftTab, Up, Down:
 			s := msg.String()
 
 			// Update focus position
-			if (s == "up" || s == "shift+tab") && focusIndex > 0 {
+			if (s == Up || s == ShiftTab) && focusIndex > 0 {
 				focusIndex--
 			} else if focusIndex < len(m.forwardingInputs)-1 {
 				focusIndex++
@@ -204,7 +209,7 @@ func (m Model) updateForwardingInputs(msg tea.Msg) tea.Cmd {
 
 			// Update focus for all inputs
 			cmds := make([]tea.Cmd, len(m.forwardingInputs))
-			for i := 0; i < len(m.forwardingInputs); i++ {
+			for i := range m.forwardingInputs {
 				if i == focusIndex {
 					cmds[i] = m.forwardingInputs[i].Focus()
 				} else {
