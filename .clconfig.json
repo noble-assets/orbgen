@@ -1,0 +1,30 @@
+{
+  "categories": [
+    "all",
+    "ci",
+    "cli",
+    "test"
+  ],
+  "change_types": [
+    {
+      "short": "feat",
+      "long": "Features"
+    },
+    {
+      "short": "imp",
+      "long": "Improvements"
+    },
+    {
+      "short": "fix",
+      "long": "Bug Fixes"
+    }
+  ],
+  "commit_message": "add changelog entry",
+  "changelog_path": "CHANGELOG.md",
+  "expected_spellings": {
+    "CI": "ci",
+    "CLI": "cli"
+  },
+  "legacy_version": null,
+  "target_repo": "https://github.com/noble-assets/orbgen"
+}
