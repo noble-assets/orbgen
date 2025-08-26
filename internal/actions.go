@@ -26,21 +26,25 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/noble-assets/orbiter/types/controller/action"
 	"github.com/noble-assets/orbiter/types/core"
 )
 
 func (m Model) writeActionSelection(s *strings.Builder) {
 	// Header
-	s.WriteString(lipgloss.NewStyle().Bold(true).Render("Orbiter Payload Generator"))
+	s.WriteString(bold.Render("Orbiter Payload Generator"))
 	s.WriteString("\n\n")
 
 	// Explanation
 	if len(m.actions) == 0 {
-		s.WriteString("\nWelcome! This tool helps you build payloads for cross-chain operations.\n")
+		s.WriteString("Welcome! This tool helps you build payloads for cross-chain operations.\n")
 		s.WriteString(
-			"Actions are optional operations that run before forwarding (like fee payments).\n",
+			"To start, select if you want to add a so-called " +
+				bold.Render("action") +
+				" to the payload.\n\n",
+		)
+		s.WriteString(
+			"Actions are optional operations that run before forwarding (e.g. fee payments).\n",
 		)
 		s.WriteString("The selected actions will be run sequentially, so bear that in mind.\n\n")
 	} else {
@@ -60,7 +64,7 @@ func (m Model) writeActionSelection(s *strings.Builder) {
 }
 
 func (m Model) writeFeeActionSelection(s *strings.Builder) {
-	s.WriteString(lipgloss.NewStyle().Bold(true).Render("Configure Fee Action"))
+	s.WriteString(bold.Render("Configure Fee Action"))
 	s.WriteString("\n\n")
 	s.WriteString("Fee actions allow you to collect a percentage of the transaction amount.\n")
 	s.WriteString("The recipient will receive the specified percentage as a fee.\n\n")

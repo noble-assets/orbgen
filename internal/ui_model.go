@@ -24,7 +24,6 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/noble-assets/orbiter/types/core"
 )
 
@@ -108,7 +107,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.windowWidth = msg.Width
 		m.windowHeight = msg.Height
 		m.list.SetWidth(msg.Width)
-		m.list.SetHeight(msg.Height - 3)
+		m.list.SetHeight(msg.Height - 8)
 
 		return m, nil
 	}
@@ -144,9 +143,7 @@ func (m Model) View() string {
 
 	if m.err != nil {
 		s.WriteString(
-			lipgloss.NewStyle().
-				Foreground(lipgloss.Color("196")).
-				Render("\nError: " + m.err.Error()),
+			errorStyle.Render("\nError: " + m.err.Error()),
 		)
 	}
 

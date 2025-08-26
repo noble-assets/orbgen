@@ -26,7 +26,6 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/noble-assets/orbiter/testutil"
 	"github.com/noble-assets/orbiter/types/controller/forwarding"
 	"github.com/noble-assets/orbiter/types/core"
@@ -34,7 +33,7 @@ import (
 
 func (m Model) writeForwardingSelection(s *strings.Builder) {
 	// Header
-	s.WriteString(lipgloss.NewStyle().Bold(true).Render("Select Forwarding Protocol"))
+	s.WriteString(bold.Render("Select Forwarding Protocol"))
 	s.WriteString("\n\n")
 
 	// Explanation
@@ -46,7 +45,7 @@ func (m Model) writeForwardingSelection(s *strings.Builder) {
 }
 
 func (m Model) writeCCTPForwardingSelection(s *strings.Builder) {
-	s.WriteString(lipgloss.NewStyle().Bold(true).Render("Configure CCTP Forwarding"))
+	s.WriteString(bold.Render("Configure CCTP Forwarding"))
 	s.WriteString("\n\n")
 	s.WriteString("CCTP enables USDC transfers across chains. Configure the destination details:\n")
 	s.WriteString(
