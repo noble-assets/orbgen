@@ -4,7 +4,7 @@ build:
 	go build -o ./build/orbgen .
 
 install:
-	go install -o ./build/orbgen .
+	go install .
 
 #=============================================================================#
 #                                 Tooling                                     #
