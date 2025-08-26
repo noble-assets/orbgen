@@ -1,0 +1,17 @@
+name: Changelog Linter
+
+on:
+  pull_request:
+
+permissions: read-all
+
+jobs:
+  lint-changelog:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v4
+
+    - name: Run changelog linter
+      uses: MalteHerrmann/changelog-lint-action@v0.3.0
