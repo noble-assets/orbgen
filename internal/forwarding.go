@@ -18,6 +18,7 @@
 package internal
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"strconv"
@@ -26,6 +27,7 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/noble-assets/orbiter/testutil"
 	"github.com/noble-assets/orbiter/types/controller/forwarding"
 	"github.com/noble-assets/orbiter/types/core"
@@ -99,12 +101,12 @@ func (m Model) initCCTPForwardingInput() Model {
 	inputs[0].Width = 30
 
 	inputs[1] = textinput.New()
-	inputs[1].Placeholder = "Mint recipient (put 'r' for random)"
+	inputs[1].Placeholder = "Mint recipient (prefix with '0x' for Hex input; otherwise base64 is assumed; put 'r' for random)"
 	inputs[1].CharLimit = 128
 	inputs[1].Width = 70
 
 	inputs[2] = textinput.New()
-	inputs[2].Placeholder = "Destination caller (put 'r' for random)"
+	inputs[2].Placeholder = "Destination caller (prefix with '0x' for Hex input; otherwise base64 is assumed; put 'r' for random)"
 	inputs[2].CharLimit = 128
 	inputs[2].Width = 70
 
@@ -150,14 +152,24 @@ func (m Model) processCCTPForwarding() (tea.Model, tea.Cmd) {
 	if mintRecipientStr == "r" {
 		mintRecipient = testutil.RandomBytes(32)
 	} else {
-		mintRecipient = []byte(mintRecipientStr)
+		mintRecipient, err = decodeHexOrBase64To32Bytes(mintRecipientStr)
+		if err != nil {
+			m.err = fmt.Errorf("invalid mint recipient: %w", err)
+
+			return m, nil
+		}
 	}
 
 	var destCaller []byte
 	if destCallerStr == "r" {
 		destCaller = testutil.RandomBytes(32)
 	} else if destCallerStr != "" {
-		destCaller = []byte(destCallerStr)
+		destCaller, err = decodeHexOrBase64To32Bytes(destCallerStr)
+		if err != nil {
+			m.err = fmt.Errorf("invalid destination caller: %w", err)
+
+			return m, nil
+		}
 	}
 
 	var passthroughPayload []byte
@@ -227,4 +239,37 @@ func (m Model) updateForwardingInputs(msg tea.Msg) tea.Cmd {
 	}
 
 	return tea.Batch(cmds...)
+}
+
+// decodeHexOrBase64To32Bytes decodes a string as either a hex or base64 encoded string.
+// It returns a 32 byte slice, or an error if the input is invalid.
+func decodeHexOrBase64To32Bytes(input string) (decoded []byte, err error) {
+	if strings.HasPrefix(input, "0x") {
+		decoded, err = hexutil.Decode(input)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode hex: %w", err)
+		}
+	} else {
+		decoded, err = base64.StdEncoding.DecodeString(input)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decode base64: %w", err)
+		}
+	}
+
+	return leftPadIfRequired(decoded)
+}
+
+// leftPadIfRequired pads a byte slice to the left with 0x00 if the length is not 32 bytes.
+func leftPadIfRequired(input []byte) ([]byte, error) {
+	if len(input) > 32 {
+		return nil, fmt.Errorf("input is too long; max 32 bytes; got: %d", len(input))
+	}
+
+	if len(input) == 32 {
+		return input, nil
+	}
+
+	pad := make([]byte, 32-len(input))
+
+	return append(pad, input...), nil
 }
