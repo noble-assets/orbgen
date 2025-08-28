@@ -1,0 +1,225 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
+
+package internal
+
+import (
+	"errors"
+	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/textinput"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/noble-assets/orbiter/types/controller/action"
+	"github.com/noble-assets/orbiter/types/core"
+)
+
+func (m Model) writeActionSelection(s *strings.Builder) {
+	// Header
+	s.WriteString(bold.Render("Orbiter Payload Generator"))
+	s.WriteString("\n\n")
+
+	// Explanation
+	if len(m.actions) == 0 {
+		s.WriteString("Welcome! This tool helps you build payloads for cross-chain operations.\n")
+		s.WriteString(
+			"To start, select if you want to add a so-called " +
+				bold.Render("action") +
+				" to the payload.\n\n",
+		)
+		s.WriteString(
+			"Actions are optional operations that run before forwarding (e.g. fee payments).\n",
+		)
+		s.WriteString("The selected actions will be run sequentially, so bear that in mind.\n\n")
+	} else {
+		s.WriteString("Add another action or continue to forwarding selection.\n")
+		s.WriteString("Current actions: ")
+		for i, act := range m.actions {
+			if i > 0 {
+				s.WriteString(", ")
+			}
+			s.WriteString(act.Id.String())
+		}
+		s.WriteString("\n\n")
+	}
+
+	// List
+	s.WriteString(m.list.View())
+}
+
+func (m Model) writeFeeActionSelection(s *strings.Builder) {
+	s.WriteString(bold.Render("Configure Fee Action"))
+	s.WriteString("\n\n")
+	s.WriteString("Fee actions allow you to collect a percentage of the transaction amount.\n")
+	s.WriteString("The recipient will receive the specified percentage as a fee.\n\n")
+
+	for _, input := range m.actionInputs {
+		s.WriteString(input.View() + "\n")
+	}
+
+	s.WriteString("\nUse Tab/Shift+Tab to navigate fields, Enter to add action, Ctrl+C to quit")
+}
+
+func (m Model) initFeeActionInput() Model {
+	inputs := make([]textinput.Model, 2)
+
+	inputs[0] = textinput.New()
+	inputs[0].Placeholder = "Fee recipient address"
+	inputs[0].CharLimit = 100
+	inputs[0].Width = 50
+
+	inputs[1] = textinput.New()
+	inputs[1].Placeholder = "Basis points (e.g. 100 for 1%)"
+	inputs[1].CharLimit = 5
+	inputs[1].Width = 30
+
+	m.actionInputs = inputs
+	m.state = feeActionInput
+	focusIndex = 0
+
+	// Focus the first input
+	m.actionInputs[0].Focus()
+
+	return m
+}
+
+func (m Model) processFeeAction() (tea.Model, tea.Cmd) {
+	recipientAddr := strings.TrimSpace(m.actionInputs[0].Value())
+	basisPointsStr := strings.TrimSpace(m.actionInputs[1].Value())
+
+	if recipientAddr == "" {
+		m.err = errors.New("recipient address is required")
+
+		return m, nil
+	}
+	if basisPointsStr == "" {
+		m.err = errors.New("basis points is required")
+
+		return m, nil
+	}
+
+	basisPoints, err := strconv.ParseUint(basisPointsStr, 10, 32)
+	if err != nil {
+		m.err = fmt.Errorf("invalid basis points: %w", err)
+
+		return m, nil
+	}
+
+	feeAttr := action.FeeAttributes{
+		FeesInfo: []*action.FeeInfo{
+			{
+				Recipient:   recipientAddr,
+				BasisPoints: uint32(basisPoints),
+			},
+		},
+	}
+
+	if err = feeAttr.Validate(); err != nil {
+		m.err = fmt.Errorf("invalid fee attributes: %w", err)
+
+		return m, nil
+	}
+
+	feeAction := core.Action{
+		Id: core.ACTION_FEE,
+	}
+
+	err = feeAction.SetAttributes(&feeAttr)
+	if err != nil {
+		m.err = fmt.Errorf("failed to set action attributes: %w", err)
+
+		return m, nil
+	}
+
+	if err = feeAction.Validate(); err != nil {
+		m.err = fmt.Errorf("invalid fee action: %w", err)
+
+		return m, nil
+	}
+
+	m.actions = append(m.actions, &feeAction)
+
+	return m.initActionSelection(), nil
+}
+
+func (m Model) initActionSelection() Model {
+	actionItems := []list.Item{
+		item{title: core.ACTION_FEE.String(), desc: "Add fee payment action"},
+		item{title: core.ACTION_SWAP.String(), desc: "Add token swap action"},
+		item{title: "No more actions", desc: "Proceed to forwarding selection"},
+	}
+
+	l := list.New(actionItems, list.NewDefaultDelegate(), 0, 0)
+	l.Title = "Select an action to add:"
+
+	// Apply stored window dimensions if we have them
+	if m.windowWidth > 0 && m.windowHeight > 0 {
+		l.SetWidth(m.windowWidth)
+		l.SetHeight(m.windowHeight - 3)
+	}
+
+	m.list = l
+	m.state = actionSelection
+
+	return m
+}
+
+func (m Model) updateActionInputs(msg tea.Msg) tea.Cmd {
+	if len(m.actionInputs) == 0 {
+		return nil
+	}
+
+	if msg, ok := msg.(tea.KeyMsg); ok {
+		switch msg.String() {
+		case Tab, ShiftTab, Up, Down:
+			s := msg.String()
+
+			// Update focus position
+			if s == Up || s == ShiftTab {
+				if focusIndex > 0 {
+					focusIndex--
+				}
+			} else {
+				if focusIndex < len(m.actionInputs)-1 {
+					focusIndex++
+				}
+			}
+
+			// Update focus for all inputs
+			cmds := make([]tea.Cmd, len(m.actionInputs))
+			for i := range m.actionInputs {
+				if i == focusIndex {
+					cmds[i] = m.actionInputs[i].Focus()
+				} else {
+					m.actionInputs[i].Blur()
+				}
+			}
+
+			return tea.Batch(cmds...)
+		}
+	}
+
+	// Handle character input and blinking for all inputs
+	cmds := make([]tea.Cmd, len(m.actionInputs))
+	for i := range m.actionInputs {
+		m.actionInputs[i], cmds[i] = m.actionInputs[i].Update(msg)
+	}
+
+	return tea.Batch(cmds...)
+}

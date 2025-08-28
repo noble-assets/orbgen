@@ -6,6 +6,10 @@ This changelog was created using the `clu` binary
 
 ## Unreleased
 
+### Features
+
+- (cli) [#3](https://github.com/noble-assets/orbgen/pull/3) Add initial working implementation.
+
 ### Improvements
 
 - (all) [#1](https://github.com/noble-assets/orbgen/pull/1) Add README.
