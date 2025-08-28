@@ -212,10 +212,15 @@ func (m Model) updateForwardingInputs(msg tea.Msg) tea.Cmd {
 			s := msg.String()
 
 			// Update focus position
-			if (s == Up || s == ShiftTab) && focusIndex > 0 {
-				focusIndex--
-			} else if focusIndex < len(m.forwardingInputs)-1 {
-				focusIndex++
+			switch s {
+			case Up, ShiftTab:
+				if focusIndex > 0 {
+					focusIndex--
+				}
+			case Down, Tab:
+				if focusIndex < len(m.forwardingInputs)-1 {
+					focusIndex++
+				}
 			}
 
 			// Update focus for all inputs
