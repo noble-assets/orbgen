@@ -275,7 +275,8 @@ func leftPadIfRequired(input []byte) ([]byte, error) {
 		return input, nil
 	}
 
-	pad := make([]byte, 32-inputLen)
+	padded := make([]byte, 32)
+	copy(padded[32-len(input):], input)
 
-	return append(pad, input...), nil
+	return padded, nil
 }
