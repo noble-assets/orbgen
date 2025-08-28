@@ -126,10 +126,10 @@ func (m Model) initCCTPForwardingInput() Model {
 }
 
 func (m Model) processCCTPForwarding() (tea.Model, tea.Cmd) {
-	domainStr := m.forwardingInputs[0].Value()
-	mintRecipientStr := m.forwardingInputs[1].Value()
-	destCallerStr := m.forwardingInputs[2].Value()
-	passthroughStr := m.forwardingInputs[3].Value()
+	domainStr := strings.TrimSpace(m.forwardingInputs[0].Value())
+	mintRecipientStr := strings.TrimSpace(m.forwardingInputs[1].Value())
+	destCallerStr := strings.TrimSpace(m.forwardingInputs[2].Value())
+	passthroughStr := strings.TrimSpace(m.forwardingInputs[3].Value())
 
 	if domainStr == "" {
 		return m, nil

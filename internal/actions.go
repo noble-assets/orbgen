@@ -100,8 +100,8 @@ func (m Model) initFeeActionInput() Model {
 }
 
 func (m Model) processFeeAction() (tea.Model, tea.Cmd) {
-	recipientAddr := m.actionInputs[0].Value()
-	basisPointsStr := m.actionInputs[1].Value()
+	recipientAddr := strings.TrimSpace(m.actionInputs[0].Value())
+	basisPointsStr := strings.TrimSpace(m.actionInputs[1].Value())
 
 	if recipientAddr == "" {
 		m.err = errors.New("recipient address is required")
