@@ -261,15 +261,16 @@ func decodeHexOrBase64To32Bytes(input string) (decoded []byte, err error) {
 
 // leftPadIfRequired pads a byte slice to the left with 0x00 if the length is not 32 bytes.
 func leftPadIfRequired(input []byte) ([]byte, error) {
-	if len(input) > 32 {
-		return nil, fmt.Errorf("input is too long; max 32 bytes; got: %d", len(input))
+	inputLen := len(input)
+	if inputLen > 32 {
+		return nil, fmt.Errorf("input is too long; max 32 bytes; got: %d", inputLen)
 	}
 
-	if len(input) == 32 {
+	if inputLen == 32 {
 		return input, nil
 	}
 
-	pad := make([]byte, 0, 32-len(input))
+	pad := make([]byte, 0, 32-inputLen)
 
 	return append(pad, input...), nil
 }
