@@ -4,12 +4,10 @@ This repository contains a TUI, that generates [noble-assets/orbiter](https://gi
 
 ## Installation
 
-To install the tool from source, you can clone the repository and run `make install`.
+To install the tool from source, you can do so through the `go` toolchain:
 
 ```shell
-git clone https://github.com/noble-assets/orbgen.git && \
-cd orbgen && \
-make install
+go install github.com/noble-assets/orbgen@latest
 ```
 
 ## Usage
