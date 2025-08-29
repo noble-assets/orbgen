@@ -24,6 +24,8 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/huh"
+	"github.com/noble-assets/orbiter/types/controller/action"
 	"github.com/noble-assets/orbiter/types/core"
 )
 
@@ -33,6 +35,7 @@ type state int
 const (
 	actionSelection state = iota
 	feeActionInput
+
 	forwardingSelection
 	cctpForwardingInput
 )
@@ -63,6 +66,8 @@ type Model struct {
 
 	windowWidth  int
 	windowHeight int
+
+	feeActionForm *huh.Form
 }
 
 // InitialModel creates the default view for the payload generator,
@@ -77,15 +82,19 @@ func InitialModel() Model {
 	l := list.New(actionItems, list.NewDefaultDelegate(), 0, 0)
 	l.Title = "Select an action to add:" //nolint:goconst
 
-	return Model{
+	m := Model{
 		state:   actionSelection,
 		list:    l,
 		actions: []*core.Action{},
 	}
+
+	m.initFeeActionForm()
+
+	return m
 }
 
 func (m Model) Init() tea.Cmd {
-	return textinput.Blink
+	return tea.Batch(textinput.Blink, m.feeActionForm.Init())
 }
 
 func (m Model) GetPayload() string {
@@ -95,6 +104,41 @@ func (m Model) GetPayload() string {
 // Update handles the different TUI states through the different
 // selection modals.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if m.state == feeActionInput {
+		var cmds []tea.Cmd
+
+		res, cmd := m.feeActionForm.Update(msg)
+		if newFeeActionForm, ok := res.(*huh.Form); ok {
+			m.feeActionForm = newFeeActionForm
+		}
+		cmds = append(cmds, cmd)
+
+		if m.feeActionForm.State == huh.StateCompleted {
+			temp := core.Action{Id: core.ACTION_FEE}
+			temp.SetAttributes(&action.FeeAttributes{
+				FeesInfo: []*action.FeeInfo{
+					{
+						Recipient:   m.feeActionForm.GetString("fee_action_recipient"),
+						BasisPoints: uint32(m.feeActionForm.GetInt("fee_action_basis_points")),
+					},
+				},
+			})
+
+			m.state = actionSelection
+			m.actions = append(m.actions, &temp)
+
+			m.initFeeActionForm()
+			cmds = append(cmds, m.feeActionForm.Init())
+		} else if m.feeActionForm.State == huh.StateAborted {
+			m.state = actionSelection
+
+			m.initFeeActionForm()
+			cmds = append(cmds, m.feeActionForm.Init())
+		}
+
+		return m, tea.Batch(cmds...)
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -116,8 +160,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch m.state {
 	case actionSelection, forwardingSelection:
 		m.list, cmd = m.list.Update(msg)
-	case feeActionInput:
-		cmd = m.updateActionInputs(msg)
 	case cctpForwardingInput:
 		cmd = m.updateForwardingInputs(msg)
 	default:
@@ -133,10 +175,11 @@ func (m Model) View() string {
 	switch m.state {
 	case actionSelection:
 		m.writeActionSelection(&s)
+	case feeActionInput:
+		return m.feeActionForm.View()
+
 	case forwardingSelection:
 		m.writeForwardingSelection(&s)
-	case feeActionInput:
-		m.writeFeeActionSelection(&s)
 	case cctpForwardingInput:
 		m.writeCCTPForwardingSelection(&s)
 	}

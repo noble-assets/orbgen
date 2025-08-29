@@ -26,6 +26,8 @@ import (
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/huh"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/noble-assets/orbiter/types/controller/action"
 	"github.com/noble-assets/orbiter/types/core"
 )
@@ -222,4 +224,25 @@ func (m Model) updateActionInputs(msg tea.Msg) tea.Cmd {
 	}
 
 	return tea.Batch(cmds...)
+}
+
+// ==========
+
+func (m *Model) initFeeActionForm() {
+	m.feeActionForm = huh.NewForm(
+		huh.NewGroup(
+			huh.NewInput().
+				Key("fee_action_recipient").
+				Title("Recipient").
+				Validate(func(input string) error {
+					_, err := sdk.AccAddressFromBech32(input)
+					return err
+				}),
+			// TODO: Add validation here as well!
+			huh.NewInput().
+				Key("fee_action_basis_points").
+				Title("Basis Points"),
+		).
+			Title("Configure Fee Action"),
+	)
 }
