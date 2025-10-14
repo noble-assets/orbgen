@@ -8,6 +8,7 @@ This changelog was created using the `clu` binary
 
 ### Features
 
+- (cli) [#4](https://github.com/noble-assets/orbgen/pull/4) Add internal transfer forwarding flow.
 - (cli) [#3](https://github.com/noble-assets/orbgen/pull/3) Add initial working implementation.
 
 ### Improvements
