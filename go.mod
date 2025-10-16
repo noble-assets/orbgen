@@ -194,5 +194,3 @@ require (
 
 // use noble version for collections
 replace cosmossdk.io/collections => github.com/noble-assets/cosmos-sdk/collections v0.0.0-20250923134424-edd65694c2f7
-
-replace github.com/circlefin/noble-cctp/api v0.0.0-00010101000000-000000000000 => github.com/circlefin/noble-cctp/api v0.0.0-20251008194745-19abb86cb784
