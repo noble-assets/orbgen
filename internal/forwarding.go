@@ -64,6 +64,19 @@ func (m Model) writeCCTPForwardingSelection(s *strings.Builder) {
 	s.WriteString("\nUse Tab/Shift+Tab to navigate fields, Enter to create payload, Ctrl+C to quit")
 }
 
+func (m Model) writeInternalForwardingSelection(s *strings.Builder) {
+	s.WriteString(bold.Render("Configure Internal Transfer"))
+	s.WriteString("\n\n")
+	s.WriteString("Internal transfers forward incoming tokens to an address on the Noble chain.\n")
+	s.WriteString("• Recipient: The bech32 Noble address to receive the tokens\n\n")
+
+	for _, input := range m.forwardingInputs {
+		s.WriteString(input.View() + "\n")
+	}
+
+	s.WriteString("\nEnter to create payload, Ctrl+C to quit")
+}
+
 func (m Model) initForwardingSelection() Model {
 	forwardingItems := []list.Item{
 		item{
@@ -75,6 +88,7 @@ func (m Model) initForwardingSelection() Model {
 			desc:  "Inter-Blockchain Communication (Cosmos ecosystem)",
 		},
 		item{title: core.PROTOCOL_HYPERLANE.String(), desc: "Hyperlane interchain protocol"},
+		item{title: core.PROTOCOL_INTERNAL.String(), desc: "Internal transfer on Noble"},
 	}
 
 	l := list.New(forwardingItems, list.NewDefaultDelegate(), 0, 0)
@@ -117,6 +131,24 @@ func (m Model) initCCTPForwardingInput() Model {
 
 	m.forwardingInputs = inputs
 	m.state = cctpForwardingInput
+	focusIndex = 0
+
+	// Focus the first input
+	m.forwardingInputs[0].Focus()
+
+	return m
+}
+
+func (m Model) initInternalForwardingInput() Model {
+	inputs := make([]textinput.Model, 1)
+
+	inputs[0] = textinput.New()
+	inputs[0].Placeholder = "Recipient address (bech32 Noble address)"
+	inputs[0].CharLimit = 128
+	inputs[0].Width = 70
+
+	m.forwardingInputs = inputs
+	m.state = internalForwardingInput
 	focusIndex = 0
 
 	// Focus the first input
@@ -190,6 +222,34 @@ func (m Model) processCCTPForwarding() (tea.Model, tea.Cmd) {
 	}
 
 	m.forwarding = cctpForwarding
+
+	m.payload, err = buildFinalPayload(m.forwarding, m.actions)
+	if err != nil {
+		m.err = fmt.Errorf("failed to build finalPayload: %w", err)
+
+		return m, nil
+	}
+
+	return m, tea.Quit
+}
+
+func (m Model) processInternalForwarding() (tea.Model, tea.Cmd) {
+	recipientStr := strings.TrimSpace(m.forwardingInputs[0].Value())
+
+	if recipientStr == "" {
+		m.err = errors.New("recipient address is required")
+
+		return m, nil
+	}
+
+	internalForwarding, err := forwarding.NewInternalForwarding(recipientStr)
+	if err != nil {
+		m.err = fmt.Errorf("failed to create internal forwarding: %w", err)
+
+		return m, nil
+	}
+
+	m.forwarding = internalForwarding
 
 	m.payload, err = buildFinalPayload(m.forwarding, m.actions)
 	if err != nil {

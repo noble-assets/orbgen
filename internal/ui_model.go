@@ -35,6 +35,7 @@ const (
 	feeActionInput
 	forwardingSelection
 	cctpForwardingInput
+	internalForwardingInput
 )
 
 type item struct {
@@ -118,7 +119,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.list, cmd = m.list.Update(msg)
 	case feeActionInput:
 		cmd = m.updateActionInputs(msg)
-	case cctpForwardingInput:
+	case cctpForwardingInput, internalForwardingInput:
 		cmd = m.updateForwardingInputs(msg)
 	default:
 		panic(fmt.Errorf("unhandled state: %v", m.state))
@@ -139,6 +140,8 @@ func (m Model) View() string {
 		m.writeFeeActionSelection(&s)
 	case cctpForwardingInput:
 		m.writeCCTPForwardingSelection(&s)
+	case internalForwardingInput:
+		m.writeInternalForwardingSelection(&s)
 	}
 
 	if m.err != nil {
@@ -181,9 +184,13 @@ func (m Model) handleEnter() (tea.Model, tea.Cmd) {
 			panic("not supported yet: " + core.PROTOCOL_IBC.String())
 		case core.PROTOCOL_HYPERLANE.String():
 			panic("not implemented yet: " + core.PROTOCOL_HYPERLANE.String())
+		case core.PROTOCOL_INTERNAL.String():
+			return m.initInternalForwardingInput(), nil
 		}
 	case cctpForwardingInput:
 		return m.processCCTPForwarding()
+	case internalForwardingInput:
+		return m.processInternalForwarding()
 	}
 
 	return m, nil
