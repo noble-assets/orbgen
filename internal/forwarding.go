@@ -67,7 +67,7 @@ func (m Model) writeCCTPForwardingSelection(s *strings.Builder) {
 func (m Model) writeInternalForwardingSelection(s *strings.Builder) {
 	s.WriteString(bold.Render("Configure Internal Transfer"))
 	s.WriteString("\n\n")
-	s.WriteString("Internal transfers send tokens to a Noble address without leaving the chain.\n")
+	s.WriteString("Internal transfers forward incoming tokens to an address on the Noble chain.\n")
 	s.WriteString("• Recipient: The bech32 Noble address to receive the tokens\n\n")
 
 	for _, input := range m.forwardingInputs {
@@ -88,7 +88,7 @@ func (m Model) initForwardingSelection() Model {
 			desc:  "Inter-Blockchain Communication (Cosmos ecosystem)",
 		},
 		item{title: core.PROTOCOL_HYPERLANE.String(), desc: "Hyperlane interchain protocol"},
-		item{title: core.PROTOCOL_INTERNAL.String(), desc: "Internal transfer"},
+		item{title: core.PROTOCOL_INTERNAL.String(), desc: "Internal transfer on Noble"},
 	}
 
 	l := list.New(forwardingItems, list.NewDefaultDelegate(), 0, 0)
