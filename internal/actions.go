@@ -182,52 +182,6 @@ func (m Model) initActionSelection() Model {
 	return m
 }
 
-func (m Model) updateActionInputs(msg tea.Msg) tea.Cmd {
-	if len(m.actionInputs) == 0 {
-		return nil
-	}
-
-	if msg, ok := msg.(tea.KeyMsg); ok {
-		switch msg.String() {
-		case Tab, ShiftTab, Up, Down:
-			s := msg.String()
-
-			// Update focus position
-			if s == Up || s == ShiftTab {
-				if focusIndex > 0 {
-					focusIndex--
-				}
-			} else {
-				if focusIndex < len(m.actionInputs)-1 {
-					focusIndex++
-				}
-			}
-
-			// Update focus for all inputs
-			cmds := make([]tea.Cmd, len(m.actionInputs))
-			for i := range m.actionInputs {
-				if i == focusIndex {
-					cmds[i] = m.actionInputs[i].Focus()
-				} else {
-					m.actionInputs[i].Blur()
-				}
-			}
-
-			return tea.Batch(cmds...)
-		}
-	}
-
-	// Handle character input and blinking for all inputs
-	cmds := make([]tea.Cmd, len(m.actionInputs))
-	for i := range m.actionInputs {
-		m.actionInputs[i], cmds[i] = m.actionInputs[i].Update(msg)
-	}
-
-	return tea.Batch(cmds...)
-}
-
-// ==========
-
 // initFeeActionForm creates the form input for the fee action
 // inputs.
 func (m *Model) initFeeActionForm() {
