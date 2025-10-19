@@ -228,6 +228,8 @@ func (m Model) updateActionInputs(msg tea.Msg) tea.Cmd {
 
 // ==========
 
+// initFeeActionForm creates the form input for the fee action
+// inputs.
 func (m *Model) initFeeActionForm() {
 	m.feeActionForm = huh.NewForm(
 		huh.NewGroup(
@@ -241,8 +243,35 @@ func (m *Model) initFeeActionForm() {
 			// TODO: Add validation here as well!
 			huh.NewInput().
 				Key("fee_action_basis_points").
-				Title("Basis Points"),
+				Title("Basis Points").
+				Validate(
+					func(s string) error {
+						bps, err := strconv.Atoi(s)
+						if err != nil {
+							return err
+						}
+
+						return validateBPS(bps)
+					},
+				),
 		).
 			Title("Configure Fee Action"),
 	)
+}
+
+const BPSNormalizer = 10_000
+
+// ValidateBPS validates the value used for the fee basis points.
+//
+// TODO:  this should be refactored on the Orbiter repo to be imported here.
+func validateBPS(bps int) error {
+	if bps == 0 {
+		return errors.New("fee basis point cannot be zero")
+	}
+
+	if bps > BPSNormalizer {
+		return fmt.Errorf("fee basis point cannot be higher than %d", BPSNormalizer)
+	}
+
+	return nil
 }
